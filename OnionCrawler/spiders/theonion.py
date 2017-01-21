@@ -25,38 +25,27 @@ class OnionSpyder(scrapy.Spider):
 		parsed = bs4.BeautifulSoup(response.text, 'html.parser')
 		d = {}
                 actualURL = parsed.find("meta", property="og:url")["content"]
-#                print("Current: " + actualURL)
 		d["url"] = actualURL
 
 		if actualURL != "" and actualURL not in self.processedArticleURLs and actualURL.split('/')[-2]=="article":
 			title = parsed.find("meta", property="og:title")["content"]
-#			print(title)
 			d["title"] = title
 			content_type = parsed.find("meta", property="og:type")["content"]
-#			print(content_type)
 			d["content_type"] = content_type
 			published_time = parsed.find("meta", property="og:published_time")["content"]
-#			print(published_time)
 			d["published_time"] = published_time
 			section = parsed.find("meta", property="og:section")["content"]
-#			print(section)
 			d["section"] = section
 			text = parsed.find_all('div', class_='content-text')
 			if (len(text) > 0 and text[0].p is not None):
 				text = text[0].p.string
 				d["text"] = text
-#				print(text)
 
 			# Dump to persistent storage here
-#			if (self.writer is None):
-#				self.writer = open("urls.txt", "w+")
-#				if (self.writer is None):
-#					print("Failed to open writer file")
-#			self.writer.write(actualURL + "\n")
 			self.processedArticleURLs.append(actualURL)
 
 			if self.writer is None:
-				self.writer = open("data.txt", "w+")
+				self.writer = open("../data/TheOnion_data.txt", "w+")
 				json.dump(d, self.writer)
 			else:
 				self.writer.write("\n")
@@ -77,8 +66,6 @@ class OnionSpyder(scrapy.Spider):
 		print("OTHER ARTICLES, count = " + str(len(otherArticles)) + "\n\n")
 		if len(otherArticles) > 0:
 			for art in otherArticles:
-#				print(art.a["data-track-label"])
-#				print("\n\n")
 				href = art.a["data-track-label"]
 				urlTokens = href.split("/")
 				if len(urlTokens) > 1 and urlTokens[1]=="article":

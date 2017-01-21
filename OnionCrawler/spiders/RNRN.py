@@ -11,10 +11,6 @@ import json
 
 class NewsCrawler(scrapy.Spider):
 	name = "RealNewsRightNow.com.Crawler"
-#	start_urls = ['http://www.theonion.com/article/conservative-acquaintance-annoyingly-not-racist-35236']
-#	start_urls = start_urls + ['http://www.theonion.com/audio/georgia-legislature-bans-indoor-spitting-21000']
-#	start_urls = start_urls + ['http://www.theonion.com/article/manly-man-wastes-entire-years-worth-of-feelings-on-50209']
-#	start_urls = start_urls + ['http://www.theonion.com/article/millions-of-holiday-travelers-return-from-parents--37564']
 
 	start_urls = ["http://realnewsrightnow.com/2016/06/cdc-cigarettes-tonic-water-may-help-prevent-spread-zika-virus/"]
 
@@ -22,7 +18,7 @@ class NewsCrawler(scrapy.Spider):
 	processedArticleURLs = []
 	writer = None
 	dumpInitialized = 0
-	paraLengthFilter = 30	# Use a length count of 20 words as filter to detect article paras in <p></p> blocks
+	paraLengthFilter = 20	# Use a length count of 20 words as filter to detect article paras in <p></p> blocks
 
 	def parse(self, response):
 		parsed = bs4.BeautifulSoup(response.text, 'html.parser')
@@ -46,8 +42,12 @@ class NewsCrawler(scrapy.Spider):
 			filteredParas = []
 			allParas = parsed.findAll("p")
 			for p in allParas:
-				# Filter 1: Cut out comments
-				if p.parent is not None and p.parent.name == 'div' and "class" in p.parent.attrs and p.parent["class"] == 'comment-content':
+				# Filter 1: Break out when artile author section reached
+				if p.parent is not None and p.parent.name == 'div' and "class" in p.parent.attrs and 'author-content' in p.parent["class"]:
+					break
+				elif p.parent is not None and p.parent.name == 'div' and "class" in p.parent.attrs and 'comment-content' in p.parent["class"]:				# Filter 2: Cut out any comments encountered
+					continue
+				else:
 					text = p.get_text()
 					if text is not None:
 						text = text.encode("ascii", 'ignore')
@@ -60,15 +60,17 @@ class NewsCrawler(scrapy.Spider):
 			self.processedArticleURLs.append(actualURL)
 
 			if self.writer is None:
-				self.writer = open("RNRNdata.txt", "w+")
-				json.dump(d, self.writer)
+				self.writer = open("../data/RNRNdata.txt", "w+")
+				if d["text"] != "":
+					json.dump(d, self.writer)
 			else:
 				self.writer.write("\n")
-				json.dump(d, self.writer)
+				if d["text"] != "":
+					json.dump(d, self.writer)
 
 		# Redirect to next list of URLs
 		newURLs = []
-		regex = "http://realnewsrightnow.com/[0-9]{4}/[0-9]{2}/"
+		regex = "^http://realnewsrightnow.com/[0-9]{4}/[0-9]{2}/"
 		r = re.compile(regex)
 		hrefs = parsed.find_all('a', href=True)
 		for hreftag in hrefs:
