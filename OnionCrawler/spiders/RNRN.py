@@ -45,7 +45,7 @@ class NewsCrawler(scrapy.Spider):
 				# Filter 1: Break out when artile author section reached
 				if p.parent is not None and p.parent.name == 'div' and "class" in p.parent.attrs and 'author-content' in p.parent["class"]:
 					break
-				elif p.parent is not None and p.parent.name == 'div' and "class" in p.parent.attrs and 'comment-content' in p.parent["class"]:				# Filter 2: Cut out any comments encountered
+				elif p.parent is not None and p.parent.name == 'div' and "class" in p.parent.attrs and 'comment-content' in p.parent["class"] or 'reply' in p.parent["class"]:				# Filter 2: Cut out any comments and comment-reply sections encountered
 					continue
 				else:
 					text = p.get_text()
