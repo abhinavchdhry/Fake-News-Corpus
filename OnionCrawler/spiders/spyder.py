@@ -1,3 +1,9 @@
+#########################################
+### Author: Abhinav Choudhury	     ####
+### North Carolina State University  ####
+### 2016			     ####
+#########################################
+
 import scrapy
 import bs4
 import re
@@ -6,6 +12,9 @@ import json
 class OnionSpyder(scrapy.Spider):
 	name = "OnionSpyder"
 	start_urls = ['http://www.theonion.com/article/conservative-acquaintance-annoyingly-not-racist-35236']
+	start_urls = start_urls + ['http://www.theonion.com/audio/georgia-legislature-bans-indoor-spitting-21000']
+	start_urls = start_urls + ['http://www.theonion.com/article/manly-man-wastes-entire-years-worth-of-feelings-on-50209']
+	start_urls = start_urls + ['http://www.theonion.com/article/millions-of-holiday-travelers-return-from-parents--37564']
 
 	parsedArticleIDs = []
 	processedArticleURLs = []
@@ -19,7 +28,7 @@ class OnionSpyder(scrapy.Spider):
 #                print("Current: " + actualURL)
 		d["url"] = actualURL
 
-		if actualURL not in self.processedArticleURLs and actualURL.split('/')[-2]=="article":
+		if actualURL != "" and actualURL not in self.processedArticleURLs and actualURL.split('/')[-2]=="article":
 			title = parsed.find("meta", property="og:title")["content"]
 #			print(title)
 			d["title"] = title
@@ -39,19 +48,19 @@ class OnionSpyder(scrapy.Spider):
 #				print(text)
 
 			# Dump to persistent storage here
-			if (self.writer is None):
-				self.writer = open("urls.txt", "w+")
-				if (self.writer is None):
-					print("Failed to open writer file")
-			self.writer.write(actualURL + "\n")
+#			if (self.writer is None):
+#				self.writer = open("urls.txt", "w+")
+#				if (self.writer is None):
+#					print("Failed to open writer file")
+#			self.writer.write(actualURL + "\n")
 			self.processedArticleURLs.append(actualURL)
 
-		if self.dumpInitialized == 0:
-			json.dumps(d)
-			self.dumpInitialized = 1
-		else:
-			print(",\n")
-			json.dumps(d)
+			if self.writer is None:
+				self.writer = open("data.txt", "w+")
+				json.dump(d, self.writer)
+			else:
+				self.writer.write("\n")
+				json.dump(d, self.writer)
 
 		# Redirect to next URL
 		newURLs = []
