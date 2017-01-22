@@ -29,19 +29,31 @@ class NewsCrawler(scrapy.Spider):
 	def parse(self, response):
 		parsed = bs4.BeautifulSoup(response.text, 'html.parser')
 		d = {}
-                actualURL = parsed.find("meta", property="og:url")["content"]
+                actualURL = parsed.find("meta", property="og:url")
+		if actualURL is not None:
+			actualURL = actualURL["content"]
 		d["url"] = actualURL
-		urlType = parsed.find("meta", property="og:type")["content"]
+		urlType = parsed.find("meta", property="og:type")
+		if urlType is not None:
+			urlType = urlType["content"]
 
 		if actualURL != "" and actualURL not in self.processedArticleURLs and urlType == "article":
-			title = parsed.find("meta", property="og:title")["content"]
+			title = parsed.find("meta", property="og:title")
+			if title is not None:
+				title = title["content"]
 			d["title"] = title
 			d["content_type"] = urlType
-			desc = parsed.find("meta", property="og:description")["content"]
+			desc = parsed.find("meta", property="og:description")
+			if desc is not None:
+				desc = desc["content"]
 			d["desc"] = desc
-			published_time = parsed.find("meta", property="article:published_time")["content"]
+			published_time = parsed.find("meta", property="article:published_time")
+			if published_time is not None:
+				published_time = published_time["content"]
 			d["published_time"] = published_time
-			section = parsed.find("meta", property="article:section")["content"]
+			section = parsed.find("meta", property="article:section")
+			if section is not None:
+				section = section["content"]
 			d["section"] = section
 
 			# Parse the text section here
@@ -80,7 +92,7 @@ class NewsCrawler(scrapy.Spider):
 		r = re.compile(regex)
 		hrefs = parsed.find_all('a', href=True)
 		for hreftag in hrefs:
-			if href.parent is not None and href.parent.name == 'div' and "class" in href.parent.attrs and 'reply' in href.parent["class"]:
+			if hreftag.parent is not None and hreftag.parent.name == 'div' and "class" in hreftag.parent.attrs and 'reply' in hreftag.parent["class"]:
 				continue
 			else:
 				href = hreftag["href"].encode('ascii', 'ignore')
