@@ -13,6 +13,12 @@ class NewsCrawler(scrapy.Spider):
 	name = "RealNewsRightNow.com.Crawler"
 
 	start_urls = ["http://realnewsrightnow.com/2016/06/cdc-cigarettes-tonic-water-may-help-prevent-spread-zika-virus/"]
+	start_urls = start_urls + ["http://realnewsrightnow.com/world-news/"]
+	start_urls = start_urls + ["http://realnewsrightnow.com/politics/"]
+	start_urls = start_urls + ["http://realnewsrightnow.com/us-news/"]
+	start_urls = start_urls + ["http://realnewsrightnow.com/sciencetechnology/"]
+	start_urls = start_urls + ["http://realnewsrightnow.com/entertainment/"]
+	start_urls = start_urls + ["http://realnewsrightnow.com/sports/"]
 
 	parsedArticleIDs = []
 	processedArticleURLs = []
@@ -74,9 +80,12 @@ class NewsCrawler(scrapy.Spider):
 		r = re.compile(regex)
 		hrefs = parsed.find_all('a', href=True)
 		for hreftag in hrefs:
-			href = hreftag["href"].encode('ascii', 'ignore')
-			if (r.match(href) is not None):
-				newURLs.append(href)
+			if href.parent is not None and href.parent.name == 'div' and "class" in href.parent.attrs and 'reply' in href.parent["class"]:
+				continue
+			else:
+				href = hreftag["href"].encode('ascii', 'ignore')
+				if (r.match(href) is not None):
+					newURLs.append(href)
 
 		# Return generator
 		for url in newURLs:
