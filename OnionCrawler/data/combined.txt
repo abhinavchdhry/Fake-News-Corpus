@@ -911,14 +911,8 @@ http://civictribune.com/lancaster-pa-amish-gangs-cause-major-problems-citizens/
 http://civictribune.com/black-friend-connect-al-sharpton/
 http://civictribune.com/dod-insider-details-obamas-plans-confiscate-registered-firearms-2015/
 http://civictribune.com/paris-jackson-roast-green-lighted-comedy-central/
-http://civictribune.com/anticipated-movie-remakes-sequels-2014/http://www.enduringvision.com/news/world.php
-http://www.enduringvision.com/news/business.php
-http://www.enduringvision.com/news/science.php
-http://www.enduringvision.com/news/sports.php
-http://www.enduringvision.com/news/politics.php
+http://civictribune.com/anticipated-movie-remakes-sequels-2014/
 http://www.enduringvision.com/news/world_061610.php
-http://www.enduringvision.com/news/arts.php
-http://www.enduringvision.com/news/us.php
 http://www.enduringvision.com/news/world_010204.php
 http://www.enduringvision.com/news/world_010304.php
 http://www.enduringvision.com/news/world_010605.php
@@ -1540,7 +1534,8 @@ http://www.enduringvision.com/news/world_011209.php
 http://www.enduringvision.com/news/world_060309.php
 http://www.enduringvision.com/news/world_040709.php
 http://www.enduringvision.com/news/world_061610.php
-http://www.enduringvision.com/news/world_032409.phphttp://politicops.com/lepage-lewis-refuses-thank-republicans-abolishing-slavery-can-always-consider-reestablishing/
+http://www.enduringvision.com/news/world_032409.php
+http://politicops.com/lepage-lewis-refuses-thank-republicans-abolishing-slavery-can-always-consider-reestablishing/
 http://politicops.com/robertson-carson-qualified-obama-hes-real-black-worker-not-mulatto-lazy-one/
 http://politicops.com/coulter-denies-mysterious-14-tweet-nazi-symbol-actually-symbolizes-certain-feature-look-white-man/
 http://politicops.com/trump-if-we-find-out-putin-tried-to-hack-the-election-well-build-a-high-firewall-and-force-russia-to-pay-for-it/
