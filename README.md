@@ -1,4 +1,4 @@
-# Fake-News-Extraction-Scripts
+# Fake-News-Corpus
 
 A corpus of random fake news/satire articles mined from websites for the purpose of building classisification models for fake news detection.
 
