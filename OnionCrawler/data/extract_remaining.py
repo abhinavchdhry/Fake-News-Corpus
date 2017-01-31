@@ -3,6 +3,7 @@ import os
 import json
 import urllib2
 import hashlib
+import requests
 
 f = open("combined.txt", "r")
 all_urls = []
@@ -27,7 +28,8 @@ count = 0
 for url in remaining:
 	try:
 		print(str(count+1) + ": Current URL: " + url)
-		content = urllib2.urlopen(url, timeout=3).read()
+#		content = urllib2.urlopen(url, timeout=3).read()
+		content = requests.get(url).text.encode('ascii', 'ignore')
 		d= {}
 		d["url"] = url
 		d["content"] = content
