@@ -1,18 +1,20 @@
-from pyspark import SparkConf, SparkContext
+#from pyspark import SparkConf, SparkContext
 import urllib2
 from bs4 import BeautifulSoup as bs
 import re
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
+import hashlib
+import json
 
 #f = open("combined.txt", "r")
-conf = SparkConf().setMaster("local[2]").setAppName("Streamer")
-sc = SparkContext(conf=conf)
+#conf = SparkConf().setMaster("local[2]").setAppName("Streamer")
+#sc = SparkContext(conf=conf)
 
-data = sc.textFile("/home/achoudh3/Fake-News-Extraction-Scripts/OnionCrawler/data/combined.txt")
+#data = sc.textFile("/home/achoudh3/Fake-News-Extraction-Scripts/OnionCrawler/data/combined.txt")
 
-r1 = re.compile("^http://www.enduringvision.com/news/([a-zA-Z]*)_([0-9]*)\.php$")
-r2 = re.compile("^http://www.newsbiscuit.com/([0-9]{4})/([0-9]{2})/([0-9]{2})/*")
-dr = re.compile("([0-9]{4})\-([0-9]{2})\-([0-9]{2})*")
+#r1 = re.compile("^http://www.enduringvision.com/news/([a-zA-Z]*)_([0-9]*)\.php$")
+#r2 = re.compile("^http://www.newsbiscuit.com/([0-9]{4})/([0-9]{2})/([0-9]{2})/*")
+#dr = re.compile("([0-9]{4})\-([0-9]{2})\-([0-9]{2})*")
 
 def DateParser(d):
 	if dr.match(d) is not None:
@@ -21,12 +23,7 @@ def DateParser(d):
 		return(None)
 
 count = 0
-#for line in f:
-#l = []
 def processor(line):
-#	l = []
-#	global count
-#	global l
 	try:
 		if r1.match(line.strip()) is not None:
 			date = r1.match(line.strip()).group(2)
@@ -37,13 +34,11 @@ def processor(line):
 				yy = 1900 + yy
 			else:
 				yy = 2000 + yy
-#			l.append([yy, mm, dd])
 			return([yy, mm, dd])
 		elif r2.match(line.strip()) is not None:
 			yyyy = int(r2.match(line.strip()).group(1))
 			mm = int(r2.match(line.strip()).group(2))
 			dd = int(r2.match(line.strip()).group(3))
-#			l.append([yyyy, mm, dd])
 			return([yyyy, mm, dd])
 		else:
 			parsed = bs(urllib2.urlopen(line.strip()).read(), "html.parser")
@@ -52,21 +47,41 @@ def processor(line):
 			if d is not None:
 				lx = DateParser(str(d["content"]))
 				if lx is not None:
-#					l.append(lx)
 					return(lx)
 		return(None)
-#		count = count + 1
-#		print(count)
 	except:
 		print("ERROR for URL: " + line)
 
-l = data.map(processor).collect()
-print("Length of l is: " + str(len(l)))
+def extract(l):
+	try:
+		d = {}
+		htmlcontent = urllib2.urlopen(line.strip()).read()
+		d["url"] = line
+		d["content"] = htmlcontent
+		m = hashlib.md5()
+		m.update(line.strip())
+		filename = m.hexdigest()
+		f = open("content/" + filename + ".txt", "w+")
+		json.dump(d, f)
+		f.close()
+	except:
+		print("Error for URL: " + line)
 
-years = []
-for x in l:
-	if x is not None and len(x) == 3:
-		years.append(x[0])
+#l = data.map(processor).collect()
+#print("Length of l is: " + str(len(l)))
 
-plt.hist(years, 20)
-plt.show()
+#years = []
+#for x in l:
+#	if x is not None and len(x) == 3:
+#		years.append(x[0])
+
+#plt.hist(years, 20)
+#plt.show()
+
+count = 0
+f = open("combined.txt", "r")
+for line in f:
+	extract(line)
+	count = count + 1
+	print(str(count) + "\n")
+
