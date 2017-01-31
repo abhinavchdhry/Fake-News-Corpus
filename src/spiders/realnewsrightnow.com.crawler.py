@@ -1,7 +1,7 @@
 #########################################
 ### Author: Abhinav Choudhury	     ####
 ### North Carolina State University  ####
-### 2016			     ####
+### 2017			     ####
 #########################################
 
 import scrapy
@@ -11,6 +11,7 @@ import json
 
 class NewsCrawler(scrapy.Spider):
 	name = "RealNewsRightNow.com.Crawler"
+	filename = "../data/realnewsrightnow.com.data"
 
 	start_urls = ["http://realnewsrightnow.com/2016/06/cdc-cigarettes-tonic-water-may-help-prevent-spread-zika-virus/"]
 	start_urls = start_urls + ["http://realnewsrightnow.com/world-news/"]
@@ -78,7 +79,7 @@ class NewsCrawler(scrapy.Spider):
 			self.processedArticleURLs.append(actualURL)
 
 			if self.writer is None:
-				self.writer = open("../data/RNRNdata.txt", "w+")
+				self.writer = open(self.filename, "w+")
 				if d["text"] != "":
 					json.dump(d, self.writer)
 			else:

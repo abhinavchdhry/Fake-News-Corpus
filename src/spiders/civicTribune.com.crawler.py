@@ -1,7 +1,7 @@
 #########################################
 ### Author: Abhinav Choudhury	     ####
 ### North Carolina State University  ####
-### 2016			     ####
+### 2017			     ####
 #########################################
 
 import scrapy
@@ -9,11 +9,22 @@ import bs4
 import re
 import json
 
-class NewsbiscuitCrawler(scrapy.Spider):
-	name = "newsbiscuit.com.Crawler"
+class CivicTribuneCrawler(scrapy.Spider):
+	name = "civictribune.com.Crawler"
+	filename = "../data/civictribune.com.data"
 
-	start_urls = ["http://www.newsbiscuit.com/2017/01/25/trump-declares-obama-presidency-was-just-fake-news/"]
-	start_urls += ["http://www.newsbiscuit.com"]
+	start_urls = ["http://civictribune.com/yolanda-saldivar-dead-at-54-selena-fans-rejoice/"]
+	start_urls += ["http://civictribune.com/"]
+#	start_urls = start_urls + ["http://abcnews.com.co/page/2/", "http://abcnews.com.co/page/3/"]
+#	start_urls = start_urls + ["http://abcnews.com.co/page/4/", "http://abcnews.com.co/page/5/"]
+#	start_urls = start_urls + ["http://abcnews.com.co/page/6/", "http://abcnews.com.co/page/7/"]
+#	start_urls = start_urls + ["http://abcnews.com.co/page/8/", "http://abcnews.com.co/page/9/"]
+#	start_urls = start_urls + ["http://abcnews.com.co/page/10/", "http://abcnews.com.co/page/11/"]
+#	start_urls = start_urls + ["http://abcnews.com.co/page/12/", "http://abcnews.com.co/page/13/",
+#					"http://abcnews.com.co/news/tech/", "http://abcnews.com.co/news/tech/page/2/",
+#					"http://abcnews.com.co/news/tech/page/3/", "http://abcnews.com.co/news/tech/page/4",
+#					"http://abcnews.com.co/news/fashion/", "http://abcnews.com.co/news/fashion/page/2/",
+#					"http://abcnews.com.co/news/fashion/page/3/", "http://abcnews.com.co/news/fashion/page/4/"]
 
 	parsedArticleIDs = []
 	processedArticleURLs = []
@@ -51,29 +62,28 @@ class NewsbiscuitCrawler(scrapy.Spider):
 			d["title"] = pageTitle["content"]
 			d["desc"] = pageDesc["content"]
 
-		if self.writer is None:
-       	                self.writer = open("../data/newsbiscuitdata.txt", "w+")
+			if self.writer is None:
+                        	self.writer = open(self.filename, "w+")
 #                              	if d["text"] != "":
 #                               		json.dump(d, self.writer)
-			self.writer.write(response.url)
-               	else:
-                     	self.writer.write("\n")
+				self.writer.write(pageURL["content"])
+                        else:
+                                self.writer.write("\n")
 #                                if d["text"] != "":
 #                                	json.dump(d, self.writer)
-			self.writer.write(response.url)
+				self.writer.write(pageURL["content"])
 
 		self.processedArticleURLs.append(response.url)
 		
 		# Redirect to next list of URLs
 		newURLs = []
 		
-		regex = "^http://www.newsbiscuit.com/[0-9]{4}/[0-9]{2}/[0-9]{2}/[a-zA-Z0-9]*\-[a-zA-Z0-9\-]*/$"
+		regex = "^http://civictribune.com/[0-9a-zA-Z]*\-[0-9a-zA-Z\\-]*/$"
 		r = re.compile(regex)
 		hrefs = parsed.find_all('a', href=True)
 		for hreftag in hrefs:
 			href = hreftag["href"].encode('ascii', 'ignore')
 			if (r.match(href) is not None and href not in self.processedArticleURLs):
-				print("New URL: " + href)
 				newURLs.append(href)
 
 		# Return generator

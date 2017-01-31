@@ -1,7 +1,7 @@
 #########################################
 ### Author: Abhinav Choudhury	     ####
 ### North Carolina State University  ####
-### 2016			     ####
+### 2017			     ####
 #########################################
 
 import scrapy
@@ -11,6 +11,7 @@ import json
 
 class ABCNewsCrawler(scrapy.Spider):
 	name = "ABCNews.com.co.Crawler"
+	filename = "../data/ABC.com.co.data"
 
 	start_urls = ["http://abcnews.com.co/"]
 	start_urls = start_urls + ["http://abcnews.com.co/page/2/", "http://abcnews.com.co/page/3/"]
@@ -65,7 +66,7 @@ class ABCNewsCrawler(scrapy.Spider):
 			d["desc"] = pageDesc["content"]
 
 			if self.writer is None:
-                                self.writer = open("../data/ABCdata.txt", "w+")
+                                self.writer = open(self.filename, "w+")
                                 if d["text"] != "":
                                         json.dump(d, self.writer)
                         else:

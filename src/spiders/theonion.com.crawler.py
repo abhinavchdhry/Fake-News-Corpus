@@ -1,7 +1,7 @@
 #########################################
 ### Author: Abhinav Choudhury	     ####
 ### North Carolina State University  ####
-### 2016			     ####
+### 2017			     ####
 #########################################
 
 import scrapy
@@ -11,6 +11,8 @@ import json
 
 class OnionSpyder(scrapy.Spider):
 	name = "OnionSpyder"
+	filename = "../data/theonion.com.data"
+
 	start_urls = ['http://www.theonion.com/article/conservative-acquaintance-annoyingly-not-racist-35236']
 	start_urls = start_urls + ['http://www.theonion.com/audio/georgia-legislature-bans-indoor-spitting-21000']
 	start_urls = start_urls + ['http://www.theonion.com/article/manly-man-wastes-entire-years-worth-of-feelings-on-50209']
@@ -45,7 +47,7 @@ class OnionSpyder(scrapy.Spider):
 			self.processedArticleURLs.append(actualURL)
 
 			if self.writer is None:
-				self.writer = open("../data/TheOnion_data.txt", "w+")
+				self.writer = open(self.filename, "w+")
 				json.dump(d, self.writer)
 			else:
 				self.writer.write("\n")

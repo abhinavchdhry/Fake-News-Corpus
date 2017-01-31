@@ -1,3 +1,12 @@
+#########################################
+### Author: Abhinav Choudhury        ####
+### North Carolina State University  ####
+### 2017                             ####
+#########################################
+
+### This script reads URLs from combined.data and extracts any
+### URL HTML data not already present in the contents/ directory
+
 from random import shuffle
 import os
 import json
@@ -5,7 +14,7 @@ import urllib2
 import hashlib
 import requests
 
-f = open("combined.txt", "r")
+f = open("combined.data", "r")
 all_urls = []
 for line in f:
 	all_urls.append(str(line.strip()))

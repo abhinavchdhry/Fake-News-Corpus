@@ -1,7 +1,7 @@
 #########################################
 ### Author: Abhinav Choudhury	     ####
 ### North Carolina State University  ####
-### 2016			     ####
+### 2017			     ####
 #########################################
 
 import scrapy
@@ -11,6 +11,7 @@ import json
 
 class EnduringVisionCrawler(scrapy.Spider):
 	name = "enduringvision.com.Crawler"
+	filename = "../data/enduringvision.com.data"
 
 	start_urls = ["http://www.enduringvision.com/news/world_061610.php"]
 	start_urls += ["http://www.enduringvision.com/news/us.php", "http://www.enduringvision.com/news/world.php", "http://www.enduringvision.com/news/sports.php", "http://www.enduringvision.com/news/politics.php", "http://www.enduringvision.com/news/business.php", "http://www.enduringvision.com/news/science.php", "http://www.enduringvision.com/news/arts.php"]
@@ -52,7 +53,7 @@ class EnduringVisionCrawler(scrapy.Spider):
 			d["desc"] = pageDesc["content"]
 
 		if self.writer is None:
-       	                self.writer = open("../data/enduringvisiondata.txt", "w+")
+       	                self.writer = open(self.filename, "w+")
 #                              	if d["text"] != "":
 #                               		json.dump(d, self.writer)
 			self.writer.write(response.url)
