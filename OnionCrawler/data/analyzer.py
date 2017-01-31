@@ -61,7 +61,7 @@ def extract(l):
 		m = hashlib.md5()
 		m.update(line.strip())
 		filename = m.hexdigest()
-		f = open("content/" + filename + ".txt", "w+")
+		f = open("content1/" + filename + ".txt", "w+")
 		json.dump(d, f)
 		f.close()
 	except:
@@ -78,9 +78,17 @@ def extract(l):
 #plt.hist(years, 20)
 #plt.show()
 
+from random import shuffle
+
 count = 0
-f = open("combined.txt", "r")
+f = open("remaining.txt", "r")
+l = []
 for line in f:
+	l.append(str((line.strip())))
+
+shuffle(l)
+
+for line in l:
 	extract(line)
 	count = count + 1
 	print(str(count) + "\n")
