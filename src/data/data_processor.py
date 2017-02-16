@@ -28,6 +28,8 @@ def text_extractor(html, feature_dict):
 		else:
 			text = p.get_text()
 			if text is not None:
+				if u'\xa0' in text:
+					text = text.replace(u'\xa0', u' ')
 				text = text.encode("ascii", "ignore").strip()
 				paraLen = len(text.split())
 				if paraLen > 20:
@@ -53,19 +55,11 @@ for a in os.listdir(fake_dir):
 	feature_dict = {}
 	for extract_feature in extractor_routines:
 		extract_feature(html, feature_dict)
-#	if "text" not in feature_dict:
-#		print("ERROR: No text")
-#	elif feature_dict["text"].strip() == "":
-#		print("EMPTY TEXT!!!\n")
-#	else:
-#		print(feature_dict["text"])
 	if ("text" in feature_dict):
 		feature_dict["class"] = "Fake"
 		f.close()
 		l.append(feature_dict)
 	count += 1
-
-#	print("\n")
 
 count = 1
 size = len(os.listdir(real_dir))
