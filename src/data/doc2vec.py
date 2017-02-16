@@ -1,5 +1,6 @@
 import json
 from gensim.models.doc2vec import TaggedDocument, Doc2Vec
+import csv
 
 f = open("data.json", "r")
 data = json.load(f)
@@ -32,7 +33,7 @@ model.build_vocab(documents)
 print("Done")
 
 print("Training model...")
-for epoch in range(10):
+for epoch in range(5):
 	print("Iteration " + str(epoch) + " ...")
 	model.train(documents)
 	model.alpha -= 0.002
@@ -41,3 +42,15 @@ print("Done")
 
 fake_docs = [list(i) for i in model.docvecs[fake_tags]]
 real_docs = [list(i) for i in model.docvecs[real_tags]]
+
+for vec in fake_docs:
+	vec.append("Fake")
+for vec in real_docs:
+	vec.append("Real")
+
+docs = fake_docs + real_docs
+
+f = open("output.csv", "w")
+writer = csv.writer(f)
+writer.writerows(docs)
+f.close()
