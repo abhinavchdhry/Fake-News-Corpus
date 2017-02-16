@@ -91,3 +91,4 @@ print("Writing to file...\n")
 out = open("data.json", "w")
 json.dump(l, out)
 out.close()
+
