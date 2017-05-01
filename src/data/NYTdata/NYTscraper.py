@@ -18,9 +18,13 @@ import random, time
 #api = articleAPI("3f94c1e436964be6909319b6d0989ec9")
 
 #api = articleAPI("7b3f3b398aec414aae09501f8c430155")
-api = articleAPI("c1083f7480f941159de8f70d60975715")
+#api = articleAPI("c1083f7480f941159de8f70d60975715")
+#api = articleAPI("bf53fb1b8c144020b41bbdf99b676157")
+#api = articleAPI("ade519c504884db097f6ce8fe9aecc2b")
 
-month = 7
+api = articleAPI("4e3304e9ba354531ba8f35935a21188b")
+
+month = 8
 outfile = open("NYTstories_" + str(month) + ".dat", "a")
 
 ## Algorithm

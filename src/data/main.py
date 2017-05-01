@@ -5,11 +5,13 @@ import pandas as pd
 import glob
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS as stop_words
 from sklearn.model_selection import StratifiedShuffleSplit
 import lightgbm as lgb
 from sklearn.metrics import log_loss, accuracy_score, precision_recall_fscore_support
 from sklearn.preprocessing import LabelEncoder
 import random
+import numpy as np
 
 print("### Reading data...")
 f = open("data.json", "r")
@@ -137,10 +139,105 @@ def vectorize(df, method='tfidf', n_features=250):
 
                 df_out = pd.DataFrame(data.todense())
                 df_out["class"] = df["class"].values
-	elif method == 'doc2vec':
-		pass
 
 	return df_out
+
+def preprocess(text):
+	tokens = text.lower().split(" ")
+	return([t.strip() for t in tokens if (t.strip() != "" and t.strip() not in stop_words)])
+
+def fit_xform_doc2vec(df_train, df_test, n_features=250, n_epochs=1):
+	print("### Doc2vec process initiated...")
+	train_fake = df_train[df_train["class"]=="Fake"]["text"].values.astype(str)
+	train_real = df_train[df_train["class"] == "Real"]["text"].values.astype(str)
+
+	fake_idx = []
+	real_idx = []
+
+	fake = []
+	real = []
+	docs = []
+	counter = 0
+	for doc in train_fake:
+		idx = "Fake_" + str(counter)
+		fake_idx.append(idx)
+		docs.append(TaggedDocument(words=preprocess(doc), tags=[idx]))
+		counter += 1
+	for doc in train_real:
+		idx = "Real_" + str(counter)
+		real_idx.append(idx)
+		docs.append(TaggedDocument(words=preprocess(doc), tags=[idx]))
+		counter += 1
+
+        print("## Building model...")
+        model = Doc2Vec(size = n_features, alpha = 0.025, min_alpha=0.025)
+        model.build_vocab(docs)
+
+        print("## Training model...")
+        for epoch in range(n_epochs):
+                print("# Iteration " + str(epoch) + " ...")
+                model.train(docs)
+                model.alpha -= 0.002
+                model.min_alpha = model.alpha
+
+	fake_df = pd.DataFrame(model.docvecs[fake_idx])
+	fake_df["class"] = "Fake"
+	real_df = pd.DataFrame(model.docvecs[real_idx])
+	real_df["class"] = "Real"
+
+	train_out_df = fake_df.append(real_df)
+	
+	test_vecs = []
+	test_docs = df_test["text"].values.astype(str)
+
+	print("## Inferring test docs...")
+	for test_doc in test_docs:
+		vec = model.infer_vector(preprocess(test_doc))
+		test_vecs.append(vec)
+
+	test_vecs = np.array(test_vecs)
+	df_test_out = pd.DataFrame(test_vecs)
+	df_test_out["class"] = df_test["class"].values
+
+	return(train_out_df, df_test_out)
+
+
+ss = StratifiedShuffleSplit(n_splits=4, test_size=0.25)
+for train_idx, test_idx in ss.split(df, df["class"].values):
+	train_df = df.iloc[train_idx]
+        test_df = df.iloc[test_idx]
+
+	train_df, test_df = fit_xform_doc2vec(train_df, test_df, n_epochs=1)
+
+        train_Y = train_df["class"].values
+        train_X = train_df.drop('class', axis=1).values
+
+        le = LabelEncoder()
+        le.fit(train_Y)
+        if le.classes_[0] == "Fake":
+                pos_label = 0
+        else:
+                pos_label = 1
+
+        train_Y = le.transform(train_Y)
+
+        val_Y = test_df['class'].values
+        val_X = test_df.drop('class', axis=1).values
+        val_Y = le.transform(val_Y)
+
+        model = lgb.LGBMClassifier(boosting_type='gbdt', objective='binary', num_leaves=60, max_depth=5, learning_rate=0.01, n_estimators=200, subsample=1, colsample_bytree=0.8, reg_lambda=0)
+        model.fit(train_X, train_Y, eval_set=[(val_X, val_Y)], eval_metric='logloss', early_stopping_rounds=20)
+
+        val_preds_proba = model.predict_proba(val_X)
+        loss = log_loss(val_Y, val_preds_proba)
+
+        val_preds = model.predict(val_X)
+        print(accuracy_score(val_Y, val_preds))
+        print(precision_recall_fscore_support(val_Y, val_preds, pos_label = pos_label, average='binary'))
+
+        print("Validation log_loss: " + str(loss))
+
+
 
 print("### Vectorization started...")
 df_features = vectorize(df, method='tfidf')
