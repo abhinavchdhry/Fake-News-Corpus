@@ -12,6 +12,7 @@ from sklearn.metrics import log_loss, accuracy_score, precision_recall_fscore_su
 from sklearn.preprocessing import LabelEncoder
 import random
 import numpy as np
+from itertools import product
 
 print("### Reading data...")
 f = open("data.json", "r")
@@ -203,7 +204,8 @@ def fit_xform_doc2vec(df_train, df_test, n_features=250, n_epochs=1):
 
 
 ss = StratifiedShuffleSplit(n_splits=4, test_size=0.25)
-for train_idx, test_idx in ss.split(df, df["class"].values):
+if 0:
+#for train_idx, test_idx in ss.split(df, df["class"].values):
 	train_df = df.iloc[train_idx]
         test_df = df.iloc[test_idx]
 
@@ -238,77 +240,87 @@ for train_idx, test_idx in ss.split(df, df["class"].values):
         print("Validation log_loss: " + str(loss))
 
 
+def runXvalidation(model, df_features, eval_metric='logloss', early_stopping = 10):
+	ss = StratifiedShuffleSplit(n_splits=4, test_size = 0.25)
+	logloss_scores = []
+	accuracy_scores = []
+	precision_scores = []
+	recall_scores = []
+	f_scores = []
+
+	for train_idx, test_idx in ss.split(df_features, df_features["class"].values):
+		train_df = df_features.iloc[train_idx]
+		test_df = df_features.iloc[test_idx]
+
+		train_Y = train_df["class"].values
+		train_X = train_df.drop('class', axis=1).values
+
+		le = LabelEncoder()
+		le.fit(train_Y)
+		if le.classes_[0] == "Fake":
+			pos_label = 0
+		else:
+			pos_label = 1
+
+		train_Y = le.transform(train_Y)
+
+		val_Y = test_df['class'].values
+		val_X = test_df.drop('class', axis=1).values
+		val_Y = le.transform(val_Y)
+
+#		model = lgb.LGBMClassifier(boosting_type='gbdt', objective='binary', num_leaves=60, max_depth=5, learning_rate=0.01, n_estimators=200, subsample=1, colsample_bytree=0.8, reg_lambda=0)
+		model.fit(train_X, train_Y, eval_set=[(val_X, val_Y)], eval_metric=eval_metric, early_stopping_rounds=early_stopping, verbose=False)
+
+	        val_preds_proba = model.predict_proba(val_X)
+	        loss = log_loss(val_Y, val_preds_proba)
+		logloss_scores.append(loss)
+
+		val_preds = model.predict(val_X)
+		accuracy = accuracy_score(val_Y, val_preds)
+		accuracy_scores.append(accuracy)
+
+		p, r, fscore, __support = precision_recall_fscore_support(val_Y, val_preds, pos_label = pos_label, average='binary')
+		precision_scores.append(p)
+		recall_scores.append(r)
+		f_scores.append(fscore)
+
+#		print("Validation log_loss: " + str(loss))
+
+	return(np.mean(logloss_scores), np.mean(accuracy_scores), np.mean(precision_scores), np.mean(recall_scores), np.mean(f_scores))
+
 
 print("### Vectorization started...")
-df_features = vectorize(df, method='tfidf')
-ss = StratifiedShuffleSplit(n_splits=4, test_size = 0.25)
+df_features = vectorize(df, method='tfidf', n_features=1000)
 
-for train_idx, test_idx in ss.split(df_features, df_features["class"].values):
-	train_df = df_features.iloc[train_idx]
-	test_df = df_features.iloc[test_idx]
+print("### Running validation tests...")
+max_depth = (4, 5, 6, 7)
+n_estimators = (500, 1000, 2000, 3000)
+early_stopping = (5, 10, 20)
+num_leaves = (25, 50, 100)
+col_sample = (0.5, 0.75, 1)
 
-	train_Y = train_df["class"].values
-	train_X = train_df.drop('class', axis=1).values
+res_file = open("results_tfidf_1000_lgb.txt", "w")
+res_file.write("max_depth,n_trees,n_leaves,l,a,p,r,f\n")
 
-	le = LabelEncoder()
-	le.fit(train_Y)
-	if le.classes_[0] == "Fake":
-		pos_label = 0
-	else:
-		pos_label = 1
+param_iters = product(max_depth, n_estimators, num_leaves, early_stopping, col_sample)
+for params in param_iters:
+	max_d = params[0]
+	n_est = params[1]
+	n_leaves = params[2]
+	early = params[3]
+	c_sample = params[4]
 
-	train_Y = le.transform(train_Y)
+	model = lgb.LGBMClassifier(boosting_type='gbdt', objective='binary', num_leaves=n_leaves, max_depth=max_d, learning_rate=0.01, n_estimators=n_est, subsample=1, colsample_bytree=c_sample, reg_lambda=0)
+	l, a, p, r, f = runXvalidation(model, df_features, early_stopping=early)
 
-	val_Y = test_df['class'].values
-	val_X = test_df.drop('class', axis=1).values
-	val_Y = le.transform(val_Y)
+	print("\n+++++++++++++++++++++++++++++++++++++")
+	print("Model: depth = {}, n_trees = {}, n_leaves = {}, early_stopping = {}, col_sample: {}".format(max_d, n_est, n_leaves, early, c_sample))
+	print("Logloss: {}, accuracy: {}, precision: {}, recall: {}, f-measure: {}".format(l, a, p, r, f))
+	print("++++++++++++++++++++++++++++++++++++++\n")
 
-	model = lgb.LGBMClassifier(boosting_type='gbdt', objective='binary', num_leaves=60, max_depth=5, learning_rate=0.01, n_estimators=200, subsample=1, colsample_bytree=0.8, reg_lambda=0)
-	model.fit(train_X, train_Y, eval_set=[(val_X, val_Y)], eval_metric='logloss', early_stopping_rounds=20)
-
-        val_preds_proba = model.predict_proba(val_X)
-        loss = log_loss(val_Y, val_preds_proba)
-
-	val_preds = model.predict(val_X)
-	print(accuracy_score(val_Y, val_preds))
-	print(precision_recall_fscore_support(val_Y, val_preds, pos_label = pos_label, average='binary'))
-
-	print("Validation log_loss: " + str(loss))
-
-
-
-
-###################################################################
-if 0:
-	real_tags = ["REAL_" + str(i) for i in range(0, real_count)]
-	fake_tags = ["FAKE_" + str(i) for i in range(0, fake_count)]
-
-	print("Done")
-
-	print("Building model...")
-	model = Doc2Vec(size = 100, alpha = 0.025, min_alpha=0.025)
-	model.build_vocab(documents)
-	print("Done")
-
-	print("Training model...")
-	for epoch in range(5):
-		print("Iteration " + str(epoch) + " ...")
-		model.train(documents)
-		model.alpha -= 0.002
-		model.min_alpha = model.alpha
-	print("Done")
-
-	fake_docs = [list(i) for i in model.docvecs[fake_tags]]
-	real_docs = [list(i) for i in model.docvecs[real_tags]]
-
-	for vec in fake_docs:
-		vec.append("Fake")
-	for vec in real_docs:
-		vec.append("Real")
-
-	docs = fake_docs + real_docs
-
-	f = open("output.csv", "w")
-	writer = csv.writer(f)
-	writer.writerows(docs)
-	f.close()
+#	res_file.write("\n++++++++++++++++++++++++++++++++")
+#	res_file.write("Model: depth = {}, n_trees = {}, n_leaves = {}, early_stopping = {}, learning-rate: {}".format(max_d, n_est, n_leaves, early, l_rate))
+#	res_file.write("Logloss: {}, accuracy: {}, precision: {}, recall: {}, f-measure: {}".format(l, a, p, r, f))
+#	res_file.write("++++++++++++++++++++++++++++++++++++++\n")
+	res_file.write("{},{},{},{},{},{},{},{},{},{}\n".format(max_d, n_est, n_leaves, early, c_sample, l, a, p, r, f))
+	res_file.flush()

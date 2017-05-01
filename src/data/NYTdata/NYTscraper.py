@@ -6,7 +6,7 @@ import random, time
 #api = articleAPI("1365a8efa2ee4cd9bb685612a03904b1")
 #api = articleAPI("aeff1d6a957f40c19bbda08b9714c4a4")
 #api = articleAPI("336886d72ea14a71a9a5c34800f9a761")
-#api =  articleAPI("8b80d00bbc10401aa74b05e4be7fd065")
+api =  articleAPI("8b80d00bbc10401aa74b05e4be7fd065")
 
 #api =  articleAPI("4009c64cd2cf4a6ea25592535e9c83e3")
 #api =  articleAPI("a91daaccbde54672921fcd3742a1a85d")
@@ -22,9 +22,9 @@ import random, time
 #api = articleAPI("bf53fb1b8c144020b41bbdf99b676157")
 #api = articleAPI("ade519c504884db097f6ce8fe9aecc2b")
 
-api = articleAPI("4e3304e9ba354531ba8f35935a21188b")
+#api = articleAPI("4e3304e9ba354531ba8f35935a21188b")
 
-month = 8
+month = 9
 outfile = open("NYTstories_" + str(month) + ".dat", "a")
 
 ## Algorithm
@@ -37,7 +37,7 @@ stories = []
 # Loop over month number
 if 1:
 	print("## Current month: " + str(month))
-	dates = [20160000 + month*100 + day for day in xrange(1, 32)]
+	dates = [20160000 + month*100 + day for day in xrange(12, 32)]
 
 	# For each date in the month
 	processed = 0
