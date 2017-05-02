@@ -23,18 +23,6 @@ fake_count = 0
 
 documents = []
 
-#print("Labeling documents...")
-#for e in data:
-#	document = e["text"]
-#	_class = e["class"]
-#	words = [w.strip() for w in document.split()]
-#	if _class == "Fake":
-#		documents.append(TaggedDocument(words=words, tags=["FAKE_" + str(fake_count)]))
-#		fake_count += 1
-#	else:
-#		documents.append(TaggedDocument(words=words, tags=["REAL_" + str(real_count)]))
-#		real_count += 1
-
 text = []
 _class = []
 for e in data:
@@ -104,13 +92,6 @@ print("Fake count = " + str(df_fake.shape[0]))
 
 print("### Writing combined dataframe...")
 df.to_csv("output.csv", index=False)
-#exit(1)
-
-
-## Random data learning verification
-#df = df[df["class"] == "Fake"]
-#idx = random.sample(df.index, len(df.index)/2)
-#df.loc[idx, "class"] = "Real"
 
 ############################ Models ###############################
 
@@ -240,7 +221,7 @@ if 0:
         print("Validation log_loss: " + str(loss))
 
 
-def runXvalidation(model, df_features, eval_metric='logloss', early_stopping = 10):
+def runXvalidation(model, df_features, eval_metric='logloss', early_stopping = 10, doc2vec=False, n_features=250, n_epochs=1):
 	ss = StratifiedShuffleSplit(n_splits=4, test_size = 0.25)
 	logloss_scores = []
 	accuracy_scores = []
@@ -251,6 +232,9 @@ def runXvalidation(model, df_features, eval_metric='logloss', early_stopping = 1
 	for train_idx, test_idx in ss.split(df_features, df_features["class"].values):
 		train_df = df_features.iloc[train_idx]
 		test_df = df_features.iloc[test_idx]
+
+		if doc2vec == True:
+			train_df, test_df = fit_xform_doc2vec(train_df, test_df, n_features=n_features, n_epochs=n_epochs)
 
 		train_Y = train_df["class"].values
 		train_X = train_df.drop('class', axis=1).values
@@ -268,7 +252,6 @@ def runXvalidation(model, df_features, eval_metric='logloss', early_stopping = 1
 		val_X = test_df.drop('class', axis=1).values
 		val_Y = le.transform(val_Y)
 
-#		model = lgb.LGBMClassifier(boosting_type='gbdt', objective='binary', num_leaves=60, max_depth=5, learning_rate=0.01, n_estimators=200, subsample=1, colsample_bytree=0.8, reg_lambda=0)
 		model.fit(train_X, train_Y, eval_set=[(val_X, val_Y)], eval_metric=eval_metric, early_stopping_rounds=early_stopping, verbose=False)
 
 	        val_preds_proba = model.predict_proba(val_X)
@@ -284,22 +267,20 @@ def runXvalidation(model, df_features, eval_metric='logloss', early_stopping = 1
 		recall_scores.append(r)
 		f_scores.append(fscore)
 
-#		print("Validation log_loss: " + str(loss))
-
 	return(np.mean(logloss_scores), np.mean(accuracy_scores), np.mean(precision_scores), np.mean(recall_scores), np.mean(f_scores))
 
 
 print("### Vectorization started...")
-df_features = vectorize(df, method='bow', n_features=500)
+#df_features = vectorize(df, method='bow', n_features=1000)
 
 print("### Running validation tests...")
 max_depth = (4, 5, 6, 7)
-n_estimators = (4000, 5000)
+n_estimators = (500, 1000, 2000)
 early_stopping = (5, 10, 20)
 num_leaves = (25, 50, 100)
 col_sample = (0.5, 0.75, 1)
 
-res_file = open("results_bow_lgb_500_ntrees_4000_5000.txt", "w")
+res_file = open("results_doc2vec_lgb_250.txt", "w")
 res_file.write("max_depth,n_trees,n_leaves,early_stopping,col_sample,l,a,p,r,f\n")
 
 param_iters = product(max_depth, n_estimators, num_leaves, early_stopping, col_sample)
@@ -311,7 +292,7 @@ for params in param_iters:
 	c_sample = params[4]
 
 	model = lgb.LGBMClassifier(boosting_type='gbdt', objective='binary', num_leaves=n_leaves, max_depth=max_d, learning_rate=0.01, n_estimators=n_est, subsample=1, colsample_bytree=c_sample, reg_lambda=0)
-	l, a, p, r, f = runXvalidation(model, df_features, early_stopping=early)
+	l, a, p, r, f = runXvalidation(model, df, early_stopping=early, doc2vec=True, n_features=250, n_epochs=3)
 
 	print("\n+++++++++++++++++++++++++++++++++++++")
 	print("Model: depth = {}, n_trees = {}, n_leaves = {}, early_stopping = {}, col_sample: {}".format(max_d, n_est, n_leaves, early, c_sample))
