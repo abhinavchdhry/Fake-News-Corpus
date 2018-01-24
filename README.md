@@ -1,5 +1,5 @@
 # A comprehensive analysis of vector space models for fake news classification
-### (NOTE: For better readability and images, see PDF)
+### (NOTE: For better readability and images, see Report.PDF)
 
 ```
 Abhinav Choudhury
